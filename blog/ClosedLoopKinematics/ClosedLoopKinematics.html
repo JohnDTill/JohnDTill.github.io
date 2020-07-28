@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Closed-loop Kinematics</title>
+  </head>
+  <body>
+    <h1>Closed-loop Kinematics</h1>
+    <p>
+      For some reason the leap from serial manipulator kinematics to closed-loop kinematics was a major hurdle for me. Hopefully this blog post will make that transition easier.
+    </p>
+    <p>Consider a 5-bar robot with two controlled angles and 2-DOF control of the end-effector:</p>
+    <img src="FiveBarSketch.svg">
+    <p>
+      <ul>
+        <li>There are 4 links on the robot, and the grounded part counts a fifth link to make this a 5-bar linkage.</li>
+        <li>We assume the robot design is symmetrical so that the first pair of links have length l₁ and the second pair length l₂.</li>
+        <li>Motors control the angles α and β, and the middle revolute joints θ and ϕ rotate passively.</li>
+        <li>The end effector has (x,y) coordinates denoted by pₑ.</li>
+      </ul>
+    </p>
+    <p>
+      From the linkages on the right, the end-effector position is given by<h4>xₑ = x₁ + l₁ cos(α) + l₂ cos(α+θ)<br>yₑ = y₁ + l₁ sin(α) + l₂ sin(α+θ)</h4>Similarly on the left we have<h4>xₑ = x₃ + l₁ cos(β) + l₂ cos(β+ϕ)<br>yₑ = y₃ + l₁ sin(β) + l₂ sin(β+ϕ)</h4>These two methods of calculating the end-effector position have to give the same answer, so the two passive angles θ and ϕ can be solved subject to the constraints<h4>x₁ + l₁ cos(α) + l₂ cos(α+θ) = x₃ + l₁ cos(β) + l₂ cos(β+ϕ)<br>y₁ + l₁ sin(α) + l₂ sin(α+θ) = y₃ + l₁ sin(β) + l₂ sin(β+ϕ)</h4>
+      How do we solve the angles given the equations? The simplest way is numerically. We can quantify the error in the constraint equations with<h4>e₁ = x₁ + l₁ cos(α) + l₂ cos(α+θ) - [x₃ + l₁ cos(β) + l₂ cos(β+ϕ)]<br>e₂ = y₁ + l₁ sin(α) + l₂ sin(α+θ) - [y₃ + l₁ sin(β) + l₂ sin(β+ϕ)]</h4>
+      Then we can use convex optimization to iteratively update the guess to minimize the error. This is demonstrated in the following MATLAB/Octave code:
+    </p>
+    <pre>
+      <code>
+%Constant parameters
+l1 = 1;
+l2 = 2;
+alpha = 0.5;
+beta = pi - alpha;
+x1 = 0;
+y1 = 0;
+x3 = -1;
+y3 = 0;
+
+%Numerical objective function to calculate error of guessed passive joint values
+objectiveFunction = @(angles) [
+  x1 + l1*cos(alpha) + l2*cos(alpha+angles(1)) - (x3 + l1*cos(beta) + l2*cos(beta+angles(2)));
+  y1 + l1*sin(alpha) + l2*sin(alpha+angles(1)) - (y3 + l1*sin(beta) + l2*sin(beta+angles(2)))
+];
+
+%Call a rountine to iteratively update the guess, guiding error to zero
+initial_guess = [0;0];
+numerically_solved_angles = fsolve(objectiveFunction, initial_guess);
+
+%Calculate end effector position from solved joint values
+xe = x1 + l1*cos(alpha) + l2*cos(alpha+numerically_solved_angles(1))
+ye = y1 + l1*sin(alpha) + l2*sin(alpha+numerically_solved_angles(1))
+
+%Plot the robot
+x2 = l1*cos(alpha);
+y2 = l1*sin(alpha);
+
+x4 = x3 + l1*cos(beta);
+y4 = y3 + l1*sin(beta);
+
+plot([x1;x2;xe;x4;x3],[y1;y2;ye;y4;y3])
+hold on
+plot([x1;x2;xe;x4;x3],[y1;y2;ye;y4;y3],'or')
+hold off
+xlabel('x')
+ylabel('y')
+title('5-bar Closed-chain Robot')
+grid on
+daspect([1 1 1])
+      </code>
+    </pre>
+    <img src="OctaveSolution.svg">
+    <p>
+      So using a numerical solution, we have solved the forward kinematics without thinking too hard.
+    </p>
+    <h2>Inverse Kinematics</h2>
+    <p>
+      So what if we want to solve the controlled motor angles α and β to reach a certain end-effector position xₑ and yₑ? This is a fairly trivial change- we could guess all the joint variables, {α,β,θ,ϕ}, then have four error equations, two for each side:<h4>e₁ = xₑ - [x₁ + l₁ cos(α) + l₂ cos(α+θ)]<br>e₂ = yₑ - [y₁ + l₁ sin(α) + l₂ sin(α+θ)]<br>e₃ = xₑ - [x₃ + l₁ cos(β) + l₂ cos(β+ϕ)]<br>e₄ = yₑ - [y₃ + l₁ sin(β) + l₂ sin(β+ϕ)]</h4>
+      Solving 4 variables subject to 4 constraints will have a discrete solution if the constraints are independent, so we pass a sanity check in that regard. The following MATLAB/Octave code numerically solves the IK:
+    </p>
+    <pre>
+      <code>
+%Constant parameters
+l1 = 1;
+l2 = 2;
+xe = 0.25;
+ye = 2;
+x1 = 0;
+y1 = 0;
+x3 = -1;
+y3 = 0;
+
+%Numerical objective function to calculate error of guessed joint values
+objectiveFunction = @(angles) [
+  xe - (x1 + l1*cos(angles(3)) + l2*cos(angles(3)+angles(1)));
+  ye - (y1 + l1*sin(angles(3)) + l2*sin(angles(3)+angles(1)));
+  xe - (x3 + l1*cos(angles(4)) + l2*cos(angles(4)+angles(2)));
+  ye - (y3 + l1*sin(angles(4)) + l2*sin(angles(4)+angles(2)))
+];
+
+%Call a rountine to iteratively update the guess, guiding error to zero
+initial_guess = [0;0;0;0];
+numerically_solved_angles = fsolve(objectiveFunction, initial_guess);
+
+%Plot the robot
+alpha = numerically_solved_angles(3)
+beta = numerically_solved_angles(4)
+
+x2 = l1*cos(alpha);
+y2 = l1*sin(alpha);
+
+x4 = x3 + l1*cos(beta);
+y4 = y3 + l1*sin(beta);
+
+plot([x1;x2;xe;x4;x3],[y1;y2;ye;y4;y3])
+hold on
+plot([x1;x2;xe;x4;x3],[y1;y2;ye;y4;y3],'or')
+hold off
+xlabel('x')
+ylabel('y')
+title('5-bar Closed-chain Robot')
+grid on
+daspect([1 1 1])
+      </code>
+    </pre>
+    <img src="OctaveSolutionIK.svg">
+    <p>
+      So the easiest way to solve closed-chain manipulator kinematics is to do an accounting of the unknown variables and the constraints on the problem, then come up with a set of variables to guess and a set of error equations. Of course there is much more complexity to dig into (analyical solutions are usually better, the choice of objective function is non-unique and might affect error convergence, numerical approaches aren't well suited for multiple solutions, etc...). But hopefully this short post helps illuminate closed-chain constraints.
+    </p>
+  </body>
+</html>
