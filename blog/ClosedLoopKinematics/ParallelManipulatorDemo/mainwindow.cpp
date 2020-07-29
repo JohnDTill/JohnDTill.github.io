@@ -52,8 +52,8 @@ static QMatrix4x4 getJacobian(QVector4D& guess, const QVector4D& err){
 static QVector4D solveLevenbergMarquardt(QVector4D y0, bool& success){
     //Convex optimization routine- this is similar to the logic fsolve uses.
 
-    static constexpr float sos_tol = 1e-12f;
-    static constexpr int max_iter = 500;
+    static constexpr float sos_tol = 1e-8f;
+    static constexpr int max_iter = 100;
     static float damp = 1e-2f;
     static float alm_adptv_coeff = 0.5;
     success = true;

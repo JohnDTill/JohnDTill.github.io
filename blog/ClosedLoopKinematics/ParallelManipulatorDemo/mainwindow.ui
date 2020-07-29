@@ -22,12 +22,25 @@
         <property name="text">
          <string>&lt;a href=&quot;https://johndtill.github.io/blog/ClosedLoopKinematics/ClosedLoopKinematics.html&quot;&gt;Blog&lt;/a&gt;</string>
         </property>
+        <property name="openExternalLinks">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>&lt;a href=&quot;https://github.com/JohnDTill/JohnDTill.github.io/tree/master/blog/ClosedLoopKinematics/ParallelManipulatorDemo&quot;&gt;Source Code&lt;/a&gt;</string>
+        </property>
+        <property name="openExternalLinks">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Use arrow or WASD keys to move</string>
         </property>
        </widget>
       </item>
