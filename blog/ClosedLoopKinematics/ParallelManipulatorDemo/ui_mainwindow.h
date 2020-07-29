@@ -27,8 +27,6 @@ public:
     QWidget *centralwidget;
     QHBoxLayout *horizontalLayout;
     QVBoxLayout *verticalLayout;
-    QLabel *label_2;
-    QLabel *label_3;
     QLabel *label_4;
     QLabel *label;
     QMenuBar *menubar;
@@ -45,18 +43,6 @@ public:
         horizontalLayout->setObjectName(QString::fromUtf8("horizontalLayout"));
         verticalLayout = new QVBoxLayout();
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
-        label_2 = new QLabel(centralwidget);
-        label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setOpenExternalLinks(true);
-
-        verticalLayout->addWidget(label_2);
-
-        label_3 = new QLabel(centralwidget);
-        label_3->setObjectName(QString::fromUtf8("label_3"));
-        label_3->setOpenExternalLinks(true);
-
-        verticalLayout->addWidget(label_3);
-
         label_4 = new QLabel(centralwidget);
         label_4->setObjectName(QString::fromUtf8("label_4"));
 
@@ -87,8 +73,6 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
-        label_2->setText(QCoreApplication::translate("MainWindow", "<a href=\"https://johndtill.github.io/blog/ClosedLoopKinematics/ClosedLoopKinematics.html\">Blog</a>", nullptr));
-        label_3->setText(QCoreApplication::translate("MainWindow", "<a href=\"https://github.com/JohnDTill/JohnDTill.github.io/tree/master/blog/ClosedLoopKinematics/ParallelManipulatorDemo\">Source Code</a>", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Use arrow or WASD keys to move", nullptr));
         label->setText(QCoreApplication::translate("MainWindow", "TextLabel", nullptr));
     } // retranslateUi
